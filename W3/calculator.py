@@ -32,6 +32,14 @@ def read_devide(line, index):
     token = {'type': 'DEVIDE'}
     return token, index + 1
 
+def read_open_parenthesis(line, index):
+    token = {'type': 'OPEN_PAREN'}
+    return token, index + 1
+
+def read_close_parenthesis(line, index):
+    token = {'type': 'CLOSE_PAREN'}
+    return token, index + 1
+
 
 def tokenize(line):
     tokens = []
@@ -47,6 +55,10 @@ def tokenize(line):
             (token, index) = read_times(line, index)
         elif line[index] == '/':
             (token, index) = read_devide(line, index)
+        elif line[index] == '(':
+            (token, index) = read_open_parenthesis(line, index)
+        elif line[index] == ')':
+            (token, index) = read_close_parenthesis(line, index)
         else:
             print('Invalid character found: ' + line[index])
             exit(1)
@@ -75,6 +87,15 @@ def evaluate_times_and_devide(tokens):
     return return_tokens
 
 
+def evaluate_parenthesis(tokens, index):
+    return_tokens = []
+    index -= 1
+    while tokens[index]['type'] != 'OPEN_PAREN':
+        return_tokens.insert(0, tokens[index])
+        index -= 1
+    return return_tokens
+
+
 def evaluate(tokens):
     answer = 0
     tokens.insert(0, {'type': 'PLUS'}) # Insert a dummy '+' token
@@ -82,17 +103,25 @@ def evaluate(tokens):
     index = 1
     while index < len(tokens):
         if tokens[index]['type'] == 'NUMBER':
-            if tokens[index-1]['type'] == 'TIMES' or tokens[index-1]['type'] == 'DEVIDE':
-                continue
             if tokens[index - 1]['type'] == 'PLUS':
                 answer += tokens[index]['number']
             elif tokens[index - 1]['type'] == 'MINUS':
                 answer -= tokens[index]['number']
-            else:
-                print('Invalid syntax')
-                exit(1)
         index += 1
     return answer
+
+
+def syntax(tokens):
+    index = 1
+    while index < len(tokens):
+        if tokens[index - 1]['type'] == 'NUMBER' and tokens[index]['type'] == 'NUMBER':
+            print('Invalid syntax: consecutive numbers')
+            exit(1)
+        if tokens[index - 1]['type'] != 'NUMBER' and tokens[index - 1]['type'] != 'NUMBER':
+            print('Invalid syntax: consecutive operators')
+            exit(1)
+        # かっこの不正を追加したい
+        index += 1
 
 
 def test(line):
@@ -113,6 +142,8 @@ def run_test():
     test("2*3")
     test("3/4")
     test("2+3*4+5")
+    test("1.0+2.0*3.5/4-2.1")
+    # test("(1+2)*(4-3)")
     print("==== Test finished! ====\n")
 
 run_test()
