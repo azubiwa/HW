@@ -28,8 +28,8 @@ def read_times(line, index):
     token = {'type': 'TIMES'}
     return token, index + 1
 
-def read_devide(line, index):
-    token = {'type': 'DEVIDE'}
+def read_divide(line, index):
+    token = {'type': 'DIVIDE'}
     return token, index + 1
 
 def read_open_parenthesis(line, index):
@@ -54,7 +54,7 @@ def tokenize(line):
         elif line[index] == '*':
             (token, index) = read_times(line, index)
         elif line[index] == '/':
-            (token, index) = read_devide(line, index)
+            (token, index) = read_divide(line, index)
         elif line[index] == '(':
             (token, index) = read_open_parenthesis(line, index)
         elif line[index] == ')':
@@ -66,7 +66,7 @@ def tokenize(line):
     return tokens
 
 
-def evaluate_times_and_devide(tokens):
+def evaluate_times_and_divide(tokens):
     return_tokens = []
     index = 0
     while index < len(tokens):
@@ -75,7 +75,7 @@ def evaluate_times_and_devide(tokens):
             number = last_num * tokens[index+1]['number']
             token = {'type': 'NUMBER', 'number': number}
             index += 1
-        elif tokens[index]['type'] == 'DEVIDE':
+        elif tokens[index]['type'] == 'DIVIDE':
             last_num = return_tokens.pop(-1)['number']
             number = last_num / tokens[index+1]['number']
             token = {'type': 'NUMBER', 'number': number}
@@ -91,15 +91,31 @@ def evaluate_parenthesis(tokens, index):
     return_tokens = []
     index -= 1
     while tokens[index]['type'] != 'OPEN_PAREN':
-        return_tokens.insert(0, tokens[index])
+        return_tokens.append(tokens[index])
         index -= 1
-    return return_tokens
+    return list(reversed(return_tokens))
+
+
+def check_parenthesis(tokens):
+    index = 1
+    open_paren_index = 0
+    while index < len(tokens):
+        if tokens[index]['type'] == 'OPEN_PAREN':
+            open_paren_index = index
+        if tokens[index]['type'] == 'CLOSE_PAREN':
+            eval_tokens = evaluate_parenthesis(tokens, index)
+            eval_answer = evaluate(eval_tokens)
+            eval_token = [{'type': 'NUMBER', 'number': eval_answer}]
+            tokens = tokens[:open_paren_index] + eval_token + tokens[index + 1:]
+            index = -1
+        index += 1
+    return tokens
 
 
 def evaluate(tokens):
     answer = 0
     tokens.insert(0, {'type': 'PLUS'}) # Insert a dummy '+' token
-    tokens = evaluate_times_and_devide(tokens)
+    tokens = evaluate_times_and_divide(tokens)
     index = 1
     while index < len(tokens):
         if tokens[index]['type'] == 'NUMBER':
@@ -126,6 +142,7 @@ def syntax(tokens):
 
 def test(line):
     tokens = tokenize(line)
+    tokens = check_parenthesis(tokens)
     actual_answer = evaluate(tokens)
     expected_answer = eval(line)
     if abs(actual_answer - expected_answer) < 1e-8:
@@ -143,7 +160,8 @@ def run_test():
     test("3/4")
     test("2+3*4+5")
     test("1.0+2.0*3.5/4-2.1")
-    # test("(1+2)*(4-3)")
+    test("(1+2)*(4-3)")
+    test("(2-(3+5))*2")
     print("==== Test finished! ====\n")
 
 run_test()
@@ -152,5 +170,6 @@ while True:
     print('> ', end="")
     line = input()
     tokens = tokenize(line)
+    tokens = check_parenthesis(tokens)
     answer = evaluate(tokens)
     print("answer = %f\n" % answer)
