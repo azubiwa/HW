@@ -128,16 +128,27 @@ def evaluate(tokens):
 
 
 def syntax(tokens):
-    index = 1
+    index = 0
+    paren_cnt = 0
     while index < len(tokens):
-        if tokens[index - 1]['type'] == 'NUMBER' and tokens[index]['type'] == 'NUMBER':
-            print('Invalid syntax: consecutive numbers')
+        if index >= 1:
+            if tokens[index - 1]['type'] == 'NUMBER' and tokens[index]['type'] == 'NUMBER':
+                print('Invalid syntax: consecutive numbers')
+                exit(1)
+            if tokens[index - 1]['type'] != 'NUMBER' and tokens[index - 1]['type'] != 'NUMBER':
+                print('Invalid syntax: consecutive operators')
+                exit(1)
+        if tokens[index]['type'] == 'OPEN_PAREN':
+            paren_cnt += 1
+        elif tokens[index]['type'] == 'CLOSE_PAREN':
+            paren_cnt -= 1
+        if paren_cnt < 0:
+            print('Invalid syntax: unmatched closing parenthesis')
             exit(1)
-        if tokens[index - 1]['type'] != 'NUMBER' and tokens[index - 1]['type'] != 'NUMBER':
-            print('Invalid syntax: consecutive operators')
-            exit(1)
-        # かっこの不正を追加したい
         index += 1
+    if paren_cnt != 0:
+        print('Invalid syntax: unmatched opening parenthesis')
+        exit(1)
 
 
 def test(line):
@@ -151,7 +162,6 @@ def test(line):
         print("FAIL! (%s should be %f but was %f)" % (line, expected_answer, actual_answer))
 
 
-# Add more tests to this function :)
 def run_test():
     print("==== Test started! ====")
     test("1+2")
@@ -170,6 +180,7 @@ while True:
     print('> ', end="")
     line = input()
     tokens = tokenize(line)
+    syntax(tokens)
     tokens = check_parenthesis(tokens)
     answer = evaluate(tokens)
     print("answer = %f\n" % answer)
