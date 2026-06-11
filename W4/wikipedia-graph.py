@@ -1,7 +1,5 @@
-import sys
-import collections
-from collections import deque
-from collections import defaultdict
+import sys, time, random
+from collections import deque, defaultdict
 
 class Wikipedia:
 
@@ -113,6 +111,7 @@ class Wikipedia:
                     path[i] = index
                     if i == goal_id:
                         print(self.shortest_path_ans(path, goal_id))
+                        print()
                         return True
                     deq.append(i)
                     seen.add(i)
@@ -153,6 +152,11 @@ class Wikipedia:
     # 'start': A title of the start page.
     # 'goal': A title of the goal page.
     def find_longest_path(self, start, goal):
+        random.seed(1)
+
+        # スタートとゴールのidを探す
+        start_id = len(self.titles) + 1
+        goal_id = len(self.titles) + 1
         for id in self.titles.keys():
             if self.titles[id] == start:
                 start_id = id
@@ -161,6 +165,66 @@ class Wikipedia:
         if start_id == len(self.titles) + 1 or goal_id == len(self.titles) + 1:
             print("スタートまたはゴールが存在しません。")
             exit(1)
+
+        # 出次数の昇順でソート
+        sorted_links_list = defaultdict()
+        for id in self.titles.keys():
+            sorted_links_list[id] = sorted(self.links[id], key=lambda x: len(self.links[x]), reverse=True)
+
+        seen = set([start_id])
+        stack = [[start_id, list(sorted_links_list[start_id])]]
+        best_path_ids = []
+        max_len = 0
+
+        start_time = time.time()
+        time_limit = 60.0 # 探索を続ける時間
+
+        while len(stack) != 0:
+            current_time = time.time()
+            if time_limit < current_time - start_time:
+                break
+
+            current_id, neighbors = stack[-1]
+
+            # ゴールに辿り着いたかどうか
+            if current_id == goal_id:
+                path_ids = [item[0] for item in stack]
+                if len(path_ids) > max_len:
+                    max_len = len(path_ids)
+                    best_path_ids = list(path_ids)
+
+                # 少し前から探索し直す
+                max_backtrack = min(100, len(stack) - 1)
+                backtrack_steps = random.randint(1, max_backtrack)
+                for _ in range(backtrack_steps):
+                    pre_id = stack.pop()[0]
+                    seen.remove(pre_id)
+                continue
+
+            # 未訪問の隣接頂点を探す
+            found_next = False
+            while len(neighbors) > 0:
+                next_id = neighbors.pop()
+                if next_id not in seen:
+                    seen.add(next_id)
+                    stack.append([next_id, list(sorted_links_list[next_id])])
+                    found_next = True
+                    break
+
+            # 探索できる隣接ノードがなければ一つ前の頂点に戻る
+            if not found_next:
+                popped_node, _ = stack.pop()
+                seen.remove(popped_node)
+
+        if max_len > 0:
+            self.assert_path(best_path_ids, start, goal)
+            ans = [self.titles[id] for id in best_path_ids]
+            print("最長経路の長さは" + str(len(ans)))
+            print("パスの先頭から最大で10個まで出力")
+            for i in range(min(10, len(ans))):
+                print(str(i+1) + ans[i])
+        else:
+            print("パスが見つかりませんでした。")
         pass
 
 
