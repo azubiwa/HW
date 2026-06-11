@@ -144,7 +144,7 @@ class Wikipedia:
         for i in range(10):
             x, y = sorted_ans_page_rank[i]
             print(str(i+1) + ": " + self.titles[x])
-        pass
+        return ans_page_rank # 関数名とreturnが違うので注意
 
 
     # Homework #3 (optional):
@@ -166,10 +166,11 @@ class Wikipedia:
             print("スタートまたはゴールが存在しません。")
             exit(1)
 
-        # 出次数の昇順でソート
+        # page rankの昇順でソート
+        page_rank_list = self.find_most_popular_pages()
         sorted_links_list = defaultdict()
         for id in self.titles.keys():
-            sorted_links_list[id] = sorted(self.links[id], key=lambda x: len(self.links[x]), reverse=True)
+            sorted_links_list[id] = sorted(self.links[id], key=lambda x: page_rank_list[x], reverse=True)
 
         seen = set([start_id])
         stack = [[start_id, list(sorted_links_list[start_id])]]
