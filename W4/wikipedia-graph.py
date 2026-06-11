@@ -105,17 +105,17 @@ class Wikipedia:
         deq.append(start_id)
         path = {start_id: -1}
         seen = defaultdict(bool)
-        seen[start_id] = True
+        seen = set([start_id])
         while len(deq) != 0:
             index = deq.popleft()
             for i in self.links[index]:
-                if not seen[i]:
+                if i not in seen:
                     path[i] = index
                     if i == goal_id:
                         print(self.shortest_path_ans(path, goal_id))
                         return True
                     deq.append(i)
-                    seen[i] = True
+                    seen.add(i)
         pass
 
 
@@ -153,9 +153,14 @@ class Wikipedia:
     # 'start': A title of the start page.
     # 'goal': A title of the goal page.
     def find_longest_path(self, start, goal):
-        #------------------------#
-        # Write your code here!  #
-        #------------------------#
+        for id in self.titles.keys():
+            if self.titles[id] == start:
+                start_id = id
+            if self.titles[id] == goal:
+                goal_id = id
+        if start_id == len(self.titles) + 1 or goal_id == len(self.titles) + 1:
+            print("スタートまたはゴールが存在しません。")
+            exit(1)
         pass
 
 
